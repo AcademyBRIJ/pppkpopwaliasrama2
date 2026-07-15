@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT D'BRIJ Academy - Ujian Simulasi ANBK</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- MathJax CDN untuk Integrasi Rumus Matematika -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Memastikan daftar nomor soal di desktop terkunci statis */
+        @media (min-width: 768px) {
+            .sidebar-fixed {
+                position: sticky;
+                top: 6rem;
+                max-height: calc(100vh - 8rem);
+                overflow-y: auto;
+            }
+        }
+        /* Mencegah pemilihan teks saat ujian */
+        .no-select {
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col no-select">
+
+    <!-- HEADER BIRU MUDA (Akan disembunyikan di Halaman Login) -->
+    <header id="main-header" class="hidden bg-sky-200 text-gray-800 border-b-2 border-sky-300 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-sky-600 text-white font-bold px-3 py-1.5 rounded text-sm tracking-wider">ANBK</div>
+                <div>
+                    <h1 class="font-bold text-sky-900 text-base leading-tight">D'BRIJ Academy</h1>
+                    <p class="text-xs text-sky-700 font-medium">Peserta: <span id="header-nama" class="font-bold">-</span></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-inner border border-sky-300">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Sisa Waktu:</span>
+                <span id="timer" class="font-mono font-bold text-lg text-red-600 animate-pulse">25:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- 1. HALAMAN LOGIN -->
+        <section id="login-page" class="bg-white p-8 rounded-xl shadow-md border border-gray-200 w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-sky-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-3 shadow">D</div>
+                <h2 class="text-2xl font-extrabold text-gray-800">D'BRIJ Academy</h2>
+                <p class="text-sm text-gray-500 mt-1">Sistem Asesmen & Ujian CBT Lokal</p>
+            </div>
+            
+            <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-lg mb-4 font-medium"></div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">Nama Lengkap Peserta</label>
+                    <input type="text" id="input-nama" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-400 focus:outline-none transition text-sm" placeholder="Masukkan nama Anda...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">Password Sistem</label>
+                    <input type="password" id="input-password" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-400 focus:outline-none transition text-sm" placeholder="••••••••">
+                </div>
+                <button id="btn-mulai" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-lg shadow-md transition-all uppercase tracking-wider text-sm mt-2 cursor-pointer">Mulai Ujian</button>
+            </div>
+            <div class="mt-6 text-center text-xs text-gray-400">
+                Durasi Ujian: 25 Menit | Total Soal: 30 Nomor
+            </div>
+        </section>
+
+        <!-- 2. HALAMAN AREA UJIAN -->
+        <section id="exam-page" class="hidden w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-6 items-start">
+            
+            <!-- AREA KIRI: SOAL DAN NAVIGASI BAWAH -->
+            <div class="w-full md:w-3/4 flex flex-col gap-4">
+                <!-- Box Informasi Materi/Soal -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
+                    <span id="materi-title" class="text-xs font-bold bg-sky-100 text-sky-800 px-3 py-1 rounded-full uppercase tracking-wider">Materi Ujian</span>
+                    <span class="text-sm font-bold text-gray-700">SOAL NOMOR: <span id="current-number-display" class="text-sky-600 text-lg">1</span></span>
+                </div>
+
+                <!-- Box Konten Soal -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-h-[320px] flex flex-col justify-between">
+                    <div>
+                        <!-- Teks Soal -->
+                        <div id="question-text" class="text-gray-800 text-base font-medium mb-6 leading-relaxed text-justify tex2jax_process">
+                            Memuat soal...
+                        </div>
+                        
+                        <!-- Pilihan Ganda -->
+                        <div id="options-container" class="space-y-3">
+                            <!-- Pilihan jawaban akan di-render di sini via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NAVIGASI TOMBOL BAWAH -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center gap-2">
+                    <button id="btn-prev" class="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold shadow transition cursor-pointer flex items-center gap-1">
+                        &larr; Soal Sebelumnya
+                    </button>
+                    
+                    <button id="btn-ragu" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-bold shadow transition cursor-pointer flex items-center gap-1">
+                        <input type="checkbox" id="check-ragu" class="w-4 h-4 accent-yellow-800 cursor-pointer"> Ragu-Ragu
+                    </button>
+                    
+                    <button id="btn-next" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow transition cursor-pointer flex items-center gap-1">
+                        Soal Berikutnya &rarr;
+                    </button>
+                    
+                    <button id="btn-selesai" class="hidden px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold shadow transition cursor-pointer uppercase tracking-wider">
+                        Selesai Ujian
+                    </button>
+                </div>
+            </div>
+
+            <!-- AREA KANAN / BAWAH HP: DAFTAR KOTAK NOMOR SOAL (STATIS/LOCKED) -->
+            <div class="w-full md:w-1/4 sidebar-fixed bg-white p-4 rounded-lg shadow-sm border border-gray-200 self-stretch md:self-auto">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 pb-2 border-b border-gray-100 text-center md:text-left">Navigasi Soal</h3>
+                
+                <!-- Grid Kotak Nomor Soal -->
+                <div id="number-grid" class="grid grid-cols-5 gap-2 max-h-[250px] md:max-h-none overflow-y-auto p-1">
+                    <!-- Kotak angka di-generate otomatis via JS -->
+                </div>
+
+                <!-- Keterangan Warna Status -->
+                <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-3 justify-center text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-green-600 block"></span> Dijawab</div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-yellow-500 block"></span> Ragu</div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-200 block border border-gray-300"></span> Belum</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 3. HALAMAN HASIL KOREKSI / SKOR AKHIR -->
+        <section id="result-page" class="hidden w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="bg-sky-700 p-6 text-center text-white">
+                <h2 class="text-2xl font-black uppercase tracking-wider">Hasil Koreksi Ujian</h2>
+                <p class="text-sm text-sky-200 mt-1">D'BRIJ Academy &bull; Nilai Kompetensi Teknis PPPK</p>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-gray-100 bg-gray-50">
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
+                    <span class="text-xs font-bold uppercase text-gray-400 block tracking-wider">Nama Peserta</span>
+                    <span id="result-nama" class="text-lg font-bold text-gray-800">-</span>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
+                    <span class="text-xs font-bold uppercase text-gray-400 block tracking-wider">Statistik Jawaban</span>
+                    <span class="text-sm font-bold text-gray-700 block mt-1">
+                        Benar: <span id="result-benar" class="text-green-600 text-base">0</span> | Salah: <span id="result-salah" class="text-red-500 text-base">0</span>
+                    </span>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-sky-200 bg-sky-50 shadow-sm text-center flex flex-col justify-center items-center">
+                    <span class="text-xs font-black uppercase text-sky-700 block tracking-wider">Total Skor Akhir</span>
+                    <span id="result-skor" class="text-3xl font-black text-sky-900">0</span>
+                </div>
+            </div>
+
+            <!-- Bagian Review Detail Koreksi Soal -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Analisis Jawaban Per Nomor:</h3>
+                <div id="review-container" class="space-y-6 max-h-[450px] overflow-y-auto pr-2">
+                    <!-- Konten koreksi dinamis di-render via JS -->
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-center">
+                <button onclick="window.location.reload();" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm rounded-lg shadow transition cursor-pointer">
+                    Kembali Ke Halaman Utama
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER LOKAL -->
+    <footer class="bg-gray-800 text-gray-400 text-center py-3 text-xs border-t border-gray-700">
+        &copy; 2026 D'BRIJ Academy. All Rights Reserved. Tampilan Desain Sistem Ujian Berbasis Komputer Lokal (ANBK).
+    </footer>
+
+    <!-- CODE UTAMA JAVASCRIPT -->
+    <script>
+        // 1. BANK SOAL ORIGINAL SELEKSI PPPK (30 Nomor Lengkap Tanpa Paraphrase)
+        const bankSoal = [
+            {
+                no: 1,
+                materi: "Materi 1: Kemampuan Melakukan Pembinaan Karakter dan Kedisiplinan",
+                soal: "Saat ronda malam, Anda menemukan beberapa siswa senior memaksa siswa junior membersihkan kamar mereka dengan alasan tradisi kedisiplinan. Sebagai Wali Asrama yang bertanggung jawab atas pembinaan karakter, tindakan yang paling tepat untuk menangani situasi ini adalah...",
+                opsi: {
+                    A: "Menghukum siswa senior secara fisik agar mereka merasakan efek jera serta ketegasan aturan asrama.",
+                    B: "Membiarkan kejadian tersebut berlangsung selama tidak ada kekerasan fisik demi menjaga senioritas.",
+                    C: "Memanggil semua siswa senior untuk berdiskusi mengenai redefinisi esensi kedisiplinan tanpa kekerasan.",
+                    D: "Memindahkan siswa junior ke kamar lain agar terhindar dari tekanan tanpa memedulikan siswa senior.",
+                    E: "Melaporkan langsung insiden ini kepada kepala sekolah agar pihak sekolah segera menjatuhkan sanksi."
+                },
+                kunci: "C"
+            },
+            {
+                no: 2,
+                materi: "Materi 1: Kemampuan Melakukan Pembinaan Karakter dan Kedisiplinan",
+                soal: "Seorang peserta didik berulang kali melanggar aturan jam malam asrama dengan alasan mengerjakan tugas kelompok sekolah. Pendekatan pembinaan disiplin yang paling edukatif dan solutif yang harus Anda lakukan adalah...",
+                opsi: {
+                    A: "Memberikan dispensasi khusus tanpa batasan waktu mengingat tugas sekolah adalah prioritas utama siswa.",
+                    B: "Melarang siswa keluar kamar sama sekali setelah jam sekolah berakhir agar fokus belajar di kamarnya.",
+                    C: "Menyusun jadwal evaluasi bersama siswa untuk menata ulang manajemen waktu dan prioritas aktivitasnya.",
+                    D: "Meminta guru mata pelajaran terkait untuk mengurangi bobot tugas siswa tersebut demi ketertiban asrama.",
+                    E: "Memberikan sanksi administratif secara tegas sesuai pedoman aturan asrama tanpa toleransi sedikit pun."
+                },
+                kunci: "C"
+            },
+            {
+                no: 3,
+                materi: "Materi 1: Kemampuan Melakukan Pembinaan Karakter dan Kedisiplinan",
+                soal: "Dalam rangka menanamkan karakter kemandirian, Anda menyusun program kerja bakti wajib setiap akhir pekan. Namun, sebagian besar peserta didik memilih membayar denda daripada mengikuti kegiatan tersebut. Langkah strategis yang Anda ambil adalah...",
+                opsi: {
+                    A: "Menaikkan jumlah nominal denda secara signifikan agar peserta didik merasa terbebani secara finansial.",
+                    B: "Menghapus sistem denda finansial dan menggantinya dengan dialog reflektif mengenai nilai kebersamaan.",
+                    C: "Memberikan penghargaan berupa fasilitas khusus bagi peserta didik yang bersedia hadir tanpa paksaan.",
+                    D: "Memaksa seluruh peserta didik tetap hadir and menyita uang saku mereka jika terbukti tidak ikut serta.",
+                    E: "Mengalihkan kegiatan kerja bakti pada hari efektif sekolah agar pengawasan dapat diperketat oleh guru."
+                },
+                kunci: "B"
+            },
+            {
+                no: 4,
+                materi: "Materi 1: Kemampuan Melakukan Pembinaan Karakter dan Kedisiplinan",
+                soal: "Anda mendapati seorang peserta didik yang dikenal berprestasi melakukan tindakan menyontek saat ujian internal asrama. Tindakan pembinaan karakter integritas yang paling tepat dan tidak menjatuhkan mental siswa tersebut adalah...",
+                opsi: {
+                    A: "Mengumumkan pelanggaran tersebut di forum formal asrama agar menjadi pelajaran berharga bagi yang lain.",
+                    B: "Mengurangi nilai akademisnya secara drastis serta membatalkan seluruh predikat prestasi yang diraihnya.",
+                    C: "Mengajak siswa berdiskusi secara personal untuk mengeksplorasi akar masalah dan menanamkan nilai kejujuran.",
+                    D: "Memaklumi tindakan tersebut karena tekanan target prestasi yang dibebankan orang tua kepada siswa.",
+                    E: "Memberikan kesempatan ujian ulang secara langsung tanpa memberikan catatan pelanggaran apa pun."
+                },
+                kunci: "C"
+            },
+            {
+                no: 5,
+                materi: "Materi 1: Kemampuan Melakukan Pembinaan Karakter dan Kedisiplinan",
+                soal: "Kebijakan baru mengenai pembatasan penggunaan gawai di asrama memicu protes keras dari mayoritas peserta didik. Sebagai Penata Layanan Operasional yang berfokus pada kedisiplinan, sikap yang harus Anda tunjukkan adalah...",
+                opsi: {
+                    A: "Mengabaikan protes tersebut dan tetap menerapkan aturan secara kaku demi menjaga wibawa pengasuh.",
+                    B: "Membuka ruang fasilitasi komunikasi untuk menjelaskan urgensi pembatasan dan menyepakati konsekuensinya.",
+                    C: "Mencabut kebijakan tersebut untuk sementara waktu sampai situasi asrama kembali kondusif dan tenang.",
+                    D: "Memberikan kebebasan penuh pada akhir pekan namun melarang total penggunaan gawai pada hari-hari biasa.",
+                    E: "Meminta perwakilan orang tua siswa untuk datang ke asrama guna menertibkan anak mereka masing-masing."
+                },
+                kunci: "B"
+            },
+            {
+                no: 6,
+                materi: "Materi 2: Kemampuan Mengelola Pengawasan Harian Peserta Didik dalam Activity Daily Living (ADL)",
+                soal: "Beberapa kamar di asrama selalu terlihat berantakan dan kotor saat inspeksi pagi hari, meskipun jadwal piket sudah dibuat. Langkah pengawasan harian yang paling efektif untuk membangun kesadaran kebersihan mandiri adalah...",
+                opsi: {
+                    A: "Mengunci kamar yang kotor agar penghuninya tidak bisa masuk sebelum kamar dibersihkan dengan rapi.",
+                    B: "Mengambil alih tugas kebersihan dengan menyewa petugas kebersihan luar lalu membebankan biaya ke siswa.",
+                    C: "Menerapkan sistem penilaian berkala antarkamar disertai apresiasi publik untuk memotivasi kompetisi sehat.",
+                    D: "Memberikan sanksi berdiri di lapangan saat apel pagi bagi seluruh anggota kamar yang melanggar aturan.",
+                    E: "Mengurangi waktu istirahat malam seluruh penghuni asrama sampai tingkat kebersihan kamar meningkat."
+                },
+                kunci: "C"
+            },
+            {
+                no: 7,
+                materi: "Materi 2: Kemampuan Mengelola Pengawasan Harian Peserta Didik dalam Activity Daily Living (ADL)",
+                soal: "Seorang peserta didik baru mengalami kesulitan beradaptasi dengan pola makan asrama dan sering melewatkan waktu makan. Sebagai Wali Asrama, langkah operasional yang harus segera Anda lakukan untuk menangani hal ini adalah...",
+                opsi: {
+                    A: "Memaksa siswa untuk menghabiskan seluruh porsi makanan yang disediakan demi menjaga kesehatan fisiknya.",
+                    B: "Memperbolehkan siswa membeli makanan di luar asrama setiap hari agar kebutuhan nutrisinya tetap terpenuhi.",
+                    C: "Melakukan pendekatan personal untuk memahami kendala adaptasinya serta mendampinginya saat sesi makan.",
+                    D: "Mengabaikan hal tersebut karena meyakini rasa lapar dengan sendirinya akan memaksa siswa untuk makan.",
+                    E: "Menghubungi orang tua siswa untuk membawakan makanan rumah yang disukai anak setiap hari ke asrama."
+                },
+                kunci: "C"
+            },
+            {
+                no: 8,
+                materi: "Materi 2: Kemampuan Mengelola Pengawasan Harian Peserta Didik dalam Activity Daily Living (ADL)",
+                soal: "Pada saat pemantauan jam tidur malam, Anda menemukan seorang peserta didik masih terjaga dan mengalami gejala insomnia akut. Tindakan pertama yang paling tepat dalam kapasitas Anda sebagai pengawas harian asrama adalah...",
+                opsi: {
+                    A: "Memberikan obat tidur dosis ringan yang tersedia di kotak P3K agar siswa bisa segera beristirahat.",
+                    B: "Memindahkan siswa ke ruang isolasi medis agar tidak mengganggu kenyamanan tidur teman sekamarnya.",
+                    C: "Menemani siswa dan mengajaknya berdialog ringan guna meredakan kecemasan yang sedang dia rasakan.",
+                    D: "Memberikan teguran keras karena telah melanggar batas waktu istirahat yang telah ditentukan asrama.",
+                    E: "Membiarkan siswa tetap terjaga dan menyuruhnya membaca buku pelajaran sampai merasa mengantuk sendiri."
+                },
+                kunci: "C"
+            },
+            {
+                no: 9,
+                materi: "Materi 2: Kemampuan Mengelola Pengawasan Harian Peserta Didik dalam Activity Daily Living (ADL)",
+                soal: "Selama beberapa minggu terakhir, penggunaan air bersih di asrama melonjak tajam akibat pola mandi peserta didik yang tidak efisien. Langkah manajemen pengawasan ADL yang paling tepat untuk mengatasi pemborosan ini adalah...",
+                opsi: {
+                    A: "Pembatasan jam aliran air bersih hanya 10 menit per kamar pada pagi dan sore hari secara ketat.",
+                    B: "Mengedukasi siswa tentang konservasi air melalui kampanye visual serta pemantauan intensif oleh ketua kamar.",
+                    C: "Mengatur denda finansial per liter air bagi kamar yang menggunakan air melebihi kuota rata-rata.",
+                    D: "Menutup sebagian keran utama asrama agar debit air yang keluar menjadi kecil dan hemat secara otomatis.",
+                    E: "Menyerahkan sepenuhnya pengawasan penggunaan air kepada pihak sekolah untuk efisiensi anggaran operasional."
+                },
+                kunci: "B"
+            },
+            {
+                no: 10,
+                materi: "Materi 2: Kemampuan Mengelola Pengawasan Harian Peserta Didik dalam Activity Daily Living (ADL)",
+                soal: "Anda mengamati seorang peserta didik selalu memakai pakaian yang sama dan tampak kumal selama beberapa hari berturut-turut. Tindakan pengawasan kebersihan diri yang paling tepat dan menjaga martabat siswa tersebut adalah...",
+                opsi: {
+                    A: "Menegur siswa di depan teman-temannya agar dia merasa malu dan segera mengganti pakaiannya.",
+                    B: "Menyita pakaian kumal tersebut secara sepihak dan memaksa siswa memakai seragam sekolah yang bersih.",
+                    C: "Membimbing siswa secara privat mengenai manajemen cuci setrika baju dan memeriksa kendala logistiknya.",
+                    D: "Melaporkan masalah kebersihan diri siswa tersebut kepada guru bimbingan konseling untuk ditindaklanjuti.",
+                    E: "Mengirimkan surat teguran resmi kepada orang tua siswa mengenai kelalaian merawat kebersihan anak."
+                },
+                kunci: "C"
+            },
+            {
+                no: 11,
+                materi: "Materi 3: Kemampuan Mengorganisir Kegiatan di Luar Jam Pelajaran Sekolah",
+                soal: "Anda ditugaskan menyusun kegiatan ekstrakurikuler akhir pekan yang dapat merekatkan hubungan sosial antar-peserta didik heterogen. Konsep kegiatan luar jam sekolah yang paling efektif dan inklusif untuk tujuan tersebut adalah...",
+                opsi: {
+                    A: "Mengadakan kompetisi olahraga sepak bola antar-kamar dengan hadiah uang tunai yang sangat besar.",
+                    B: "Merancang festival seni budaya berbasis proyek kelompok campuran yang menuntut kolaborasi aktif semua siswa.",
+                    C: "Menyelenggarakan seminar motivasi nasional dengan mengundang pembicara terkenal di aula utama asrama.",
+                    D: "Membuat kelas belajar tambahan malam hari terfokus untuk persiapan ujian akhir semester masing-masing.",
+                    E: "Mengadakan kunjungan wisata belanja ke pusat perbelanjaan modern agar siswa merasa terhibur dan senang."
+                },
+                kunci: "B"
+            },
+            {
+                no: 12,
+                materi: "Materi 3: Kemampuan Mengorganisir Kegiatan di Luar Jam Pelajaran Sekolah",
+                soal: "Banyak peserta didik yang mengeluhkan kejenuhan terhadap rutinitas asrama, namun enggan berpartisipasi saat diajak membuat kegiatan baru. Langkah organisasional awal yang paling tepat untuk mengaktifkan kembali peran siswa adalah...",
+                opsi: {
+                    A: "Menunjuk beberapa siswa secara acak untuk menjadi ketua panitia acara tanpa persetujuan mereka terlebih dahulu.",
+                    B: "Membentuk forum dengar pendapat informal untuk menampung minat tersembunyi siswa dan mendesain acara bersama.",
+                    C: "Mewajibkan seluruh siswa mengikuti agenda kegiatan lama dengan ancaman pengurangan poin pelanggaran asrama.",
+                    D: "Mengambil alih penuh pembuatan acara dari awal sampai akhir tanpa melibatkan partisipasi aktif siswa lagi.",
+                    E: "Membatalan seluruh rencana kegiatan luar jam sekolah dan membiarkan siswa bebas tanpa agenda apa pun."
+                },
+                kunci: "B"
+            },
+            {
+                no: 13,
+                materi: "Materi 3: Kemampuan Mengorganisir Kegiatan di Luar Jam Pelajaran Sekolah",
+                soal: "Saat merancang kegiatan bakti sosial di luar lingkungan asrama, Anda dihadapkan pada keterbatasan anggaran operasional layanan. Strategi pengorganisasian yang paling cerdas dan mandiri untuk mengatasi kendala tersebut adalah...",
+                opsi: {
+                    A: "Membatalkan kegiatan bakti sosial dan menggantinya dengan kegiatan internal yang tidak memakan biaya.",
+                    B: "Meminta sumbangan wajib dengan nominal tinggi kepada orang tua seluruh peserta didik asrama tanpa kecuali.",
+                    C: "Mengarahkan siswa memanfaatkan barang bekas layak jual di asrama untuk dikelola menjadi sumber dana kreatif.",
+                    D: "Mengajukan pinjaman dana kepada pihak ketiga atas nama instansi sekolah tanpa persetujuan kepala sekolah.",
+                    E: "Mengurangi volume porsi makan harian peserta didik selama satu minggu demi dialokasikan ke dana baksos."
+                },
+                kunci: "C"
+            },
+            {
+                no: 14,
+                materi: "Materi 3: Kemampuan Mengorganisir Kegiatan di Luar Jam Pelajaran Sekolah",
+                soal: "Kegiatan pentas seni asrama berbenturan dengan jadwal persiapan ujian remedial beberapa siswa yang nilainya di bawah standar. Sebagai pengelola kegiatan luar jam sekolah, solusi terbaik yang Anda tawarkan adalah...",
+                opsi: {
+                    A: "Melarang total siswa yang remedial untuk terlibat atau menonton pentas seni agar fokus belajar di perpus.",
+                    B: "Menunda pelaksanaan pentas seni sampai seluruh proses remedial di sekolah selesai dilaksanakan semua siswa.",
+                    C: "Mengintegrasikan jadwal latihan seni dengan sesi tutor sebaya yang fleksibel agar kedua target tercapai.",
+                    D: "Meminta guru sekolah meluluskan siswa yang remedial agar kegiatan pentas seni asrama bisa berjalan sukses.",
+                    E: "Membebaskan siswa memilih salah satu kegiatan sepenuhnya tanpa perlu memikirkan konsekuensi akademisnya."
+                },
+                kunci: "C"
+            },
+            {
+                no: 15,
+                materi: "Materi 3: Kemampuan Mengorganisir Kegiatan di Luar Jam Pelajaran Sekolah",
+                soal: "Evaluasi menunjukkan bahwa kegiatan kerohanian malam hari di asrama kurang diminati karena metode penyampaian yang monoton. Langkah inovatif yang paling tepat Anda lakukan untuk meningkatkan antusiasme peserta didik adalah...",
+                opsi: {
+                    A: "Mengganti pemateri dengan guru yang lebih tegas dan menakutkan agar siswa terpaksa mendengarkan materi.",
+                    B: "Mengubah format kegiatan menjadi diskusi interaktif berbasis studi kasus riil kehidupan remaja saat ini.",
+                    C: "Mewajibkan absen digital yang terhubung langsung ke gawai orang tua siswa agar mereka merasa diawasi.",
+                    D: "Menjanjikan nilai tambahan untuk mata pelajaran agama di sekolah bagi siswa yang tingkat kehadirannya penuh.",
+                    E: "Mengurangi durasi kegiatan menjadi hanya lima menit saja agar siswa tidak sempat merasakan kejenuhan."
+                },
+                kunci: "B"
+            },
+            {
+                no: 16,
+                materi: "Materi 4: Kemampuan Mediasi dan Penyelesaian Konflik Antar-Peserta Didik",
+                soal: "Dua orang peserta didik sekamar terlibat pertengkaran hebat hingga saling melempar barang karena tuduhan pencurian uang. Sebagai Wali Asrama, langkah mediasi awal yang paling tepat dan aman untuk mengendalikan situasi adalah...",
+                opsi: {
+                    A: "Langsung memanggil pihak kepolisian untuk melakukan olah tempat kejadian perkara di dalam kamar asrama.",
+                    B: "Memisahkan kedua siswa secara fisik ke ruangan berbeda guna meredakan emosi sebelum dilakukan klarifikasi.",
+                    C: "Memaksa salah satu siswa yang dicurigai untuk langsung meminta maaf agar konflik selesai dengan cepat.",
+                    D: "Menggeledah seluruh isi kamar di depan semua penghuni asrama lainnya untuk membuktikan siapa yang mencuri.",
+                    E: "Membiarkan mereka menyelesaikan pertengkaran sendiri sebagai bentuk pembelajaran kedewasaan emosional."
+                },
+                kunci: "B"
+            },
+            {
+                no: 17,
+                materi: "Materi 4: Kemampuan Mediasi dan Penyelesaian Konflik Antar-Peserta Didik",
+                soal: "Terjadi konflik laten antar-kelompok siswa berdasarkan latar belakang daerah asal yang menyebabkan suasana asrama menjadi tegang. Strategi mediasi struktural yang paling efektif untuk mencairkan polarisasi kelompok ini adalah...",
+                opsi: {
+                    A: "Mengisolasi masing-masing kelompok ke gedung asrama yang berbeda agar mereka tidak saling bertemu lagi.",
+                    B: "Mengadakan perlombaan debat antarsuku untuk membuktikan kelompok mana yang memiliki pemikiran paling unggul.",
+                    C: "Melakukan reshuffle pembagian kamar secara acak dan mewajibkan proyek kolaborasi lintas suku di asrama.",
+                    D: "Memberikan teguran keras kepada ketua kelompok masing-masing daerah dengan ancaman dikeluarkan dari asrama.",
+                    E: "Mengabaikan ketegangan tersebut selama tidak terjadi bentrokan fisik yang merugikan fasilitas asrama."
+                },
+                kunci: "C"
+            },
+            {
+                no: 18,
+                materi: "Materi 4: Kemampuan Mediasi dan Penyelesaian Konflik Antar-Peserta Didik",
+                soal: "Seorang siswa melaporkan bahwa ia menjadi korban pengucilan (social bullying) oleh teman-teman satu geng di asramanya. Tindakan mediasi yang paling tepat untuk memulihkan kondisi psikologis korban dan keharmonisan asrama adalah...",
+                opsi: {
+                    A: "Meminta korban untuk introspeksi diri dan mengubah kepribadiannya agar bisa diterima kembali oleh geng tersebut.",
+                    B: "Memanggil perwakilan geng secara persuasif untuk mendengarkan perspektif mereka lalu mempertemukannya dengan korban.",
+                    C: "Menghukum seluruh anggota geng dengan menjemur mereka di lapangan terbuka agar jera melakukan pengucilan.",
+                    D: "Menyarankan kepada orang tua korban untuk memindahkan anaknya ke sekolah lain demi keselamatan mentalnya.",
+                    E: "Mengonfrontasi langsung geng tersebut di tengah aula asrama agar mereka mendapat sanksi sosial dari siswa lain."
+                },
+                kunci: "B"
+            },
+            {
+                no: 19,
+                materi: "Materi 4: Kemampuan Mediasi dan Penyelesaian Konflik Antar-Peserta Didik",
+                soal: "Dalam proses mediasi perselisihan batas meja belajar, kedua siswa bersikeras bahwa mereka paling berhak atas fasilitas tersebut. Sebagai mediator yang adil, pendekatan penyelesaian yang harus Anda ambil adalah...",
+                opsi: {
+                    A: "Memutuskan secara sepihak pembagian meja berdasarkan siapa siswa yang memiliki nilai akademis lebih tinggi.",
+                    B: "Menyita meja belajar tersebut dan membiarkan kedua siswa belajar di lantai sampai mereka bisa berdamai.",
+                    C: "Mengajak keduanya merumuskan kesepakatan pemanfaatan bersama berbasis jadwal waktu yang adil bagi kedua pihak.",
+                    D: "Memberikan meja belajar baru dengan membebankan biaya pembelian sepenuhnya kepada orang tua kedua siswa.",
+                    E: "Menyerahkan keputusan pembagian meja kepada ketua asrama agar Anda terhindar dari tuduhan tidak netral."
+                },
+                kunci: "C"
+            },
+            {
+                no: 20,
+                materi: "Materi 4: Kemampuan Mediasi dan Penyelesaian Konflik Antar-Peserta Didik",
+                soal: "Anda menemukan bahwa konflik perselisihan sepele antara dua siswa telah melebar ke media sosial dan melibatkan alumni asrama. Langkah penanganan konflik yang paling tepat dan taktis untuk meredam eskalasi masalah ini adalah...",
+                opsi: {
+                    A: "Memblokir seluruh akun media sosial milik peserta didik asrama melalui sistem jaringan internet pusat.",
+                    B: "Mengadakan pertemuan tertutup dengan kedua siswa, orang tua, dan pihak sekolah untuk menyelesaikan akar masalah digital.",
+                    C: "Membuat pernyataan klarifikasi publik di media sosial asrama yang menyalahkan tindakan kedua siswa tersebut.",
+                    D: "Membiarkan konflik digital berlangsung karena area tersebut berada di luar yurisdiksi fisik operasional asrama.",
+                    E: "Menyerahkan penyelesaian masalah sepenuhnya kepada ikatan alumni untuk diselesaikan secara kekeluargaan."
+                },
+                kunci: "B"
+            },
+            {
+                no: 21,
+                materi: "Materi 5: Kemampuan Komunikasi Efektif",
+                soal: "Seorang peserta didik yang biasanya ceria tiba-tiba menjadi pendiam dan sering mengurung diri di pojok kamar asrama. Pola komunikasi awal yang paling tepat Anda terapkan sebagai Wali Asrama yang empati adalah...",
+                opsi: {
+                    A: "Menanyakan masalahnya secara langsung dengan nada suara keras di hadapan teman-teman sekamarnya agar jujur.",
+                    B: "Memberikan waktu luang secara privat, menggunakan teknik active listening tanpa menghakimi cerita siswa.",
+                    C: "Menunggu sampai siswa tersebut datang sendiri menemui Anda untuk menceritakan masalah yang dialaminya.",
+                    D: "Menyampaikan kondisi siswa tersebut kepada seluruh pengasuh asrama melalui grup pesan singkat internal.",
+                    E: "Menasihati siswa secara panjang lebar tentang pentingnya keteguhan mental dalam menghadapi ujian hidup."
+                },
+                kunci: "B"
+            },
+            {
+                no: 22,
+                materi: "Materi 5: Kemampuan Komunikasi Efektif",
+                soal: "Anda harus menyampaikan pengumuman pembatalan mudik bersama libur nasional karena adanya pembatasan wilayah dari pemerintah. Agar pengumuman ini tidak memicu gejolak dan kekecewaan berlebih pada siswa, strategi komunikasi Anda adalah...",
+                opsi: {
+                    A: "Menempelkan surat keputusan pembatalan di papan pengumuman pada malam hari secara diam-diam tanpa penjelasan.",
+                    B: "Menyampaikan informasi secara transparan melalui forum tatap muka disertai penjelasan opsi kegiatan pengganti yang seru.",
+                    C: "Meminta ketua asrama saja yang mengumumkan hal tersebut agar kemarahan siswa tidak diarahkan kepada Anda.",
+                    D: "Mengulur-ulur waktu penyampaian informasi sampai hari H pembatalan tiba agar siswa tidak memiliki waktu protes.",
+                    E: "Mengatakan bahwa pembatalan ini adalah murni kesalahan pihak sekolah bukan karena kebijakan asrama."
+                },
+                kunci: "B"
+            },
+            {
+                no: 23,
+                materi: "Materi 5: Kemampuan Komunikasi Efektif",
+                soal: "Orang tua peserta didik menghubungi Anda dengan nada marah-marah karena menerima laporan keliru dari anaknya mengenai fasilitas asrama. Sikap komunikasi profesional yang harus Anda tunjukkan dalam merespons telepon tersebut adalah...",
+                opsi: {
+                    A: "Memotong pembicaraan orang tua dan langsung membantah dengan keras tuduhan keliru yang disampaikan.",
+                    B: "Mendengarkan dengan tenang hingga emosinya mereda, lalu memberikan klarifikasi data faktual secara santun.",
+                    C: "Menutup panggilan telepon secara sepihak karena merasa tidak dihargai sebagai pengasuh resmi asrama.",
+                    D: "Melaporkan balik kelakuan anaknya kepada orang tua tersebut agar mereka malu telah memarahi Anda.",
+                    E: "Mengabaikan telepon tersebut dan menyerahkan urusannya kepada bagian sarana prasarana sekolah."
+                },
+                kunci: "B"
+            },
+            {
+                no: 24,
+                materi: "Materi 5: Kemampuan Komunikasi Efektif",
+                soal: "Dalam rapat evaluasi bulanan asrama, Anda ingin memberikan umpan balik (feedback) negatif kepada seorang rekan pengasuh yang lalai tugas. Teknik komunikasi asertif yang paling tepat digunakan agar tidak menyinggung perasaan rekan adalah...",
+                opsi: {
+                    A: "Menyampaikan kelalaian rekan tersebut secara blak-blakan di depan forum rapat agar disaksikan pimpinan.",
+                    B: "Menggunakan metode 'sandwich' (apresiasi-kritik membangun-apresiasi) dalam sesi dialog empat mata secara personal.",
+                    C: "Menyindir kelalaian tugas tersebut melalui status media sosial agar rekan tersebut merasa tersindir halus.",
+                    D: "Diam saja dalam rapat namun menceritakan kelalaian rekan tersebut kepada pengasuh-pengasuh yang lainnya.",
+                    E: "Menulis surat kaleng tanpa identitas dan meletakkannya di atas meja kerja rekan tersebut secara rahasia."
+                },
+                kunci: "B"
+            },
+            {
+                no: 25,
+                materi: "Materi 5: Kemampuan Komunikasi Efektif",
+                soal: "Anda mengamati adanya hambatan komunikasi (miskomunikasi) yang kronis antara pengasuh asrama senior dan peserta didik generasi Z. Langkah taktis yang dapat Anda rancang selaku Penata Layanan Operasional untuk menjembatani hal ini adalah...",
+                opsi: {
+                    A: "Mewajibkan peserta didik mengikuti pelatihan tata krama bahasa kuno agar bisa memahami gaya komunikasi senior.",
+                    B: "Memaksa pengasuh senior menggunakan bahasa gaul remaja sepenuhnya dalam setiap instruksi formal asrama.",
+                    C: "Membangun media komunikasi dua arah yang adaptif melalui pemanfaatan aplikasi digital interaktif asrama.",
+                    D: "Mengganti seluruh pengasuh senior dengan tenaga kerja baru yang berusia jauh lebih muda tanpa kompromi.",
+                    E: "Membatasi intensitas komunikasi langsung antara senior dan siswa hanya untuk hal-hal yang bersifat darurat."
+                },
+                kunci: "C"
+            },
+            {
+                no: 26,
+                materi: "Materi 6: Kemampuan Berperilaku Baik dan Positif Sehingga Menjadi Panutan Peserta Didik",
+                soal: "Anda melihat sampah berserakan di lorong asrama saat berjalan menuju ruang kerja, sementara beberapa siswa sedang asyik mengobrol di dekatnya. Tindakan keteladanan (role modeling) yang paling berintegritas untuk Anda lakukan adalah...",
+                opsi: {
+                    A: "Memarahi siswa-siswa tersebut karena membiarkan sampah dan memerintahkan mereka langsung menyapunya.",
+                    B: "Memungut sampah tersebut dengan tenang di depan siswa lalu membuangnya ke tempat sampah tanpa berkata ketus.",
+                    C: "Mengabaikan sampah tersebut karena kebersihan lorong adalah tanggung jawab penuh dari petugas kebersihan.",
+                    D: "Memotret sampah dan siswa tersebut untuk dijadikan bahan laporan pelanggaran tata tertib dalam rapat pleno.",
+                    E: "Menendang sampah tersebut ke arah kamar siswa agar mereka sadar bahwa keberadaan sampah itu mengganggu."
+                },
+                kunci: "B"
+            },
+            {
+                no: 27,
+                materi: "Materi 6: Kemampuan Berperilaku Baik dan Positif Sehingga Menjadi Panutan Peserta Didik",
+                soal: "Sebagai Wali Asrama, Anda sering menasihati peserta didik untuk selalu hadir tepat waktu. Namun, suatu hari Anda terlambat hadir rapat koordinasi asrama karena ban motor bocor. Sikap teladan yang harus Anda tunjukkan adalah...",
+                opsi: {
+                    A: "Mencari-cari alasan lain yang lebih logis dan dramatis agar keterlambatan Anda dapat dimaklumi oleh forum.",
+                    B: "Masuk ruang rapat diam-diam tanpa menyapa peserta rapat lainnya untuk menghindari perhatian atas keterlambatan.",
+                    C: "Menyampaikan permohonan maaf secara jujur, mengakui kesalahan, dan menerima konsekuensi keterlambatan dengan legawa.",
+                    D: "Menyalahkan kualitas ban motor produksi pabrik yang buruk sebagai penyebab utama kegagalan hadir tepat waktu.",
+                    E: "Meminta rapat dibatalkan dan dijadwalkan ulang pada hari lain demi menjaga nama baik Anda sebagai pengasuh."
+                },
+                kunci: "C"
+            },
+            {
+                no: 28,
+                materi: "Materi 6: Kemampuan Berperilaku Baik dan Positif Sehingga Menjadi Panutan Peserta Didik",
+                soal: "Ketika terjadi pemadaman listrik total di asrama yang memicu kepanikan dan kegaduhan di kalangan peserta didik, sikap emosional yang paling tepat Anda tampilkan sebagai figur panutan adalah...",
+                opsi: {
+                    A: "Ikut berteriak panik agar para siswa mengetahui bahwa situasi saat itu memang benar-benar dalam kondisi darurat.",
+                    B: "Tetap tenang, menyalakan penerangan darurat, dan memberikan instruksi evakuasi dengan nada suara yang tegas terukur.",
+                    C: "Mengunci diri di ruang kerja yang aman sampai aliran listrik kembali dinyalakan oleh petugas PLN pusat.",
+                    D: "Menyalahkan bagian sarana prasarana asrama di depan para siswa karena dinilai lalai menyediakan genset cadangan.",
+                    E: "Menyuruh seluruh siswa untuk langsung tidur di tempat masing-masing dalam kegelapan tanpa pengecekan keamanan."
+                },
+                kunci: "B"
+            },
+            {
+                no: 29,
+                materi: "Materi 6: Kemampuan Berperilaku Baik dan Positif Sehingga Menjadi Panutan Peserta Didik",
+                soal: "Anda mengetahui bahwa seorang peserta didik menaruh rasa hormat yang besar kepada Anda dan mulai meniru gaya bicara serta cara berpakaian Anda. Sikap bijaksana yang harus Anda ambil menyikapi fenomena peniruan ini adalah...",
+                opsi: {
+                    A: "Menegur siswa tersebut secara keras karena dinilai telah menghilangkan identitas kepribadian aslinya sendiri.",
+                    B: "Sengaja mengubah gaya hidup Anda menjadi buruk untuk menguji tingkat kesetiaan dan konsistensi peniruan siswa.",
+                    C: "Menjaga konsistensi perilaku positif sehari-hari dan membimbing siswa agar tetap mengembangkan potensi orisinalnya.",
+                    D: "Memanfaatkan rasa hormat siswa tersebut untuk menyuruhnya melakukan tugas-tugas pribadi Anda di luar asrama.",
+                    E: "Menjauhi siswa tersebut secara sosial agar tidak terjadi kedekatan emosional yang terlalu dalam antar-personel."
+                },
+                kunci: "C"
+            },
+            {
+                no: 30,
+                materi: "Materi 6: Kemampuan Berperilaku Baik dan Positif Sehingga Menjadi Panutan Peserta Didik",
+                soal: "Di asrama, terdapat perbedaan pandangan politik yang tajam di antara sesama staf pengasuh menjelang pemilu daerah. Sebagai figur panutan bagi peserta didik, sikap netralitas dan perilaku positif yang wajib Anda tunjukkan adalah...",
+                opsi: {
+                    A: "Melakukan kampanye terselubung saat sesi kultum keagamaan malam hari demi memenangkan paslon pilihan Anda.",
+                    B: "Terlibat aktif dalam debat kusir politik dengan staf lain di kantin asrama yang dapat disaksikan oleh para siswa.",
+                    C: "Menjaga netralitas, mengedukasi siswa tentang pentingnya menghargai perbedaan opini, dan menjaga iklim asrama tetap damai.",
+                    D: "Melarang siswa membicarakan tema politik apa pun di lingkungan asrama dengan ancaman hukuman skorsing akademis.",
+                    E: "Mengikuti pilihan politik mayoritas staf pengasuh asrama demi menjaga stabilitas dan kenyamanan relasi kerja."
+                },
+                kunci: "C"
+            }
+        ];
+
+        // 2. STATE VARIABEL APLIKASI
+        let currentIdx = 0;
+        let namaPeserta = "";
+        let userAnswers = new Array(bankSoal.length).fill(""); 
+        let raguState = new Array(bankSoal.length).fill(false);
+        let timeRemaining = 25 * 60; // 25 Menit dalam hitungan detik
+        let timerInterval = null;
+
+        // Dom Elements
+        const loginPage = document.getElementById("login-page");
+        const examPage = document.getElementById("exam-page");
+        const resultPage = document.getElementById("result-page");
+        const mainHeader = document.getElementById("main-header");
+        
+        // 3. FUNGSI AUTH LOGIN
+        document.getElementById("btn-mulai").addEventListener("click", () => {
+            const namaInput = document.getElementById("input-nama").value.trim();
+            const passwordInput = document.getElementById("input-password").value.trim();
+            const errorDiv = document.getElementById("login-error");
+
+            if (!namaInput) {
+                errorDiv.innerText = "NAMA PESERTA WAJIB DIISI!";
+                errorDiv.classList.remove("hidden");
+                return;
+            }
+            if (passwordInput !== "popwali2") {
+                errorDiv.innerText = "PASSWORD SISTEM SALAH ATAU TIDAK VALID!";
+                errorDiv.classList.remove("hidden");
+                return;
+            }
+
+            // Sukses Login -> Init App
+            namaPeserta = namaInput;
+            document.getElementById("header-nama").innerText = namaPeserta;
+            
+            loginPage.classList.add("hidden");
+            mainHeader.classList.remove("hidden");
+            examPage.classList.remove("hidden");
+            
+            initNumberGrid();
+            renderQuestion();
+            startTimer();
+        });
+
+        // 4. GENERATE SISI KANAN / BAWAH HP: NOMOR KOTAK NAVIGASI SOAL
+        function initNumberGrid() {
+            const grid = document.getElementById("number-grid");
+            grid.innerHTML = "";
+            bankSoal.forEach((q, idx) => {
+                const btn = document.createElement("button");
+                btn.id = `grid-no-${idx}`;
+                btn.type = "button";
+                btn.className = "h-11 border border-gray-300 rounded font-bold text-sm bg-gray-200 text-gray-700 hover:bg-sky-100 transition flex items-center justify-center cursor-pointer";
+                btn.innerText = q.no;
+                btn.addEventListener("click", () => {
+                    currentIdx = idx;
+                    renderQuestion();
+                });
+                grid.appendChild(btn);
+            });
+            updateGridStyles();
+        }
+
+        // 5. UPDATE WARNA NAVIGASI KOTAK SOAL (HIJAU / KUNING / NETRAL)
+        function updateGridStyles() {
+            bankSoal.forEach((_, idx) => {
+                const btn = document.getElementById(`grid-no-${idx}`);
+                if (!btn) return;
+                
+                // Reset basic styles
+                btn.className = "h-11 border rounded font-bold text-sm text-center transition flex items-center justify-center cursor-pointer ";
+                
+                // Menandai Active Border
+                if (idx === currentIdx) {
+                    btn.className += "ring-4 ring-sky-500 scale-105 z-10 ";
+                }
+
+                // Cek Status Jawaban & Ragu
+                if (raguState[idx]) {
+                    btn.className += "bg-yellow-500 border-yellow-600 text-white";
+                } else if (userAnswers[idx] !== "") {
+                    btn.className += "bg-green-600 border-green-700 text-white";
+                } else {
+                    btn.className += "bg-gray-100 border-gray-300 text-gray-700";
+                }
+            });
+        }
+
+        // 6. RENDER KONTEN SOAL AKTIF
+        function renderQuestion() {
+            const currentSoal = bankSoal[currentIdx];
+            
+            // Atur Label Info Nomor & Materi
+            document.getElementById("current-number-display").innerText = currentSoal.no;
+            document.getElementById("materi-title").innerText = currentSoal.materi;
+            
+            // Inject Text Soal
+            document.getElementById("question-text").innerHTML = currentSoal.soal;
+            
+            // Inject Opsi Pilihan Ganda
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+            
+            Object.entries(currentSoal.opsi).forEach(([key, value]) => {
+                const isChecked = userAnswers[currentIdx] === key;
+                
+                const optionWrapper = document.createElement("div");
+                optionWrapper.className = `flex items-start gap-3 p-3.5 border rounded-lg cursor-pointer transition select-none ${isChecked ? 'bg-sky-50 border-sky-400 font-semibold' : 'bg-white border-gray-200 hover:bg-gray-50'}`;
+                
+                // Aksi klik untuk memilih jawaban
+                optionWrapper.addEventListener("click", () => {
+                    selectAnswer(key);
+                });
+
+                optionWrapper.innerHTML = `
+                    <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 ${isChecked ? 'border-sky-600 bg-sky-600 text-white' : 'border-gray-400 text-gray-600'} text-xs font-bold shrink-0">
+                        ${key}
+                    </div>
+                    <div class="text-gray-700 text-sm leading-tight tex2jax_process">${value}</div>
+                `;
+                optionsContainer.appendChild(optionWrapper);
+            });
+
+            // Set Checkbox Ragu-ragu
+            const checkRagu = document.getElementById("check-ragu");
+            checkRagu.checked = raguState[currentIdx];
+
+            // Atur Visibilitas Tombol Navigasi
+            document.getElementById("btn-prev").disabled = (currentIdx === 0);
+            document.getElementById("btn-prev").style.opacity = (currentIdx === 0) ? "0.4" : "1";
+            
+            if (currentIdx === bankSoal.length - 1) {
+                document.getElementById("btn-next").classList.add("hidden");
+                document.getElementById("btn-selesai").classList.remove("hidden");
+            } else {
+                document.getElementById("btn-next").classList.remove("hidden");
+                document.getElementById("btn-selesai").classList.add("hidden");
+            }
+
+            updateGridStyles();
+            
+            // Trigger MathJax re-render jika terdapat teks bilangan matematika latex
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // 7. HANDLE AKSI JAWABAN PESERTA
+        function selectAnswer(alphabetKey) {
+            userAnswers[currentIdx] = alphabetKey;
+            renderQuestion();
+        }
+
+        // Checkbox Ragu-ragu trigger
+        document.getElementById("check-ragu").addEventListener("change", (e) => {
+            raguState[currentIdx] = e.target.checked;
+            updateGridStyles();
+        });
+
+        // Navigasi Button Klik
+        document.getElementById("btn-next").addEventListener("click", () => {
+            if (currentIdx < bankSoal.length - 1) {
+                currentIdx++;
+                renderQuestion();
+            }
+        });
+
+        document.getElementById("btn-prev").addEventListener("click", () => {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion();
+            }
+        });
+
+        // 8. HITUNG MUNDUR WAKTU UJIAN (COUNTDOWN)
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let mins = Math.floor(timeRemaining / 60);
+                let secs = timeRemaining % 60;
+                
+                document.getElementById("timer").innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Waktu pengerjaan telah habis! Sistem otomatis mengumpulkan berkas ujian Anda.");
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        // 9. EVENT FINISH SELESAI UJIAN & PROSES EVALUASI SKOR
+        document.getElementById("btn-selesai").addEventListener("click", () => {
+            const unaswered = userAnswers.filter(ans => ans === "").length;
+            let confirmMsg = "Apakah Anda yakin ingin mengakhiri sesi ujian ini?";
+            if(unaswered > 0) {
+                confirmMsg = `Peringatan: Ada ${unaswered} nomor soal yang belum Anda jawab. Tetap selesaikan ujian?`;
+            }
+            if(confirm(confirmMsg)) {
+                finishExam();
+            }
+        });
+
+        function finishExam() {
+            clearInterval(timerInterval);
+            examPage.classList.add("hidden");
+            mainHeader.classList.add("hidden");
+            resultPage.classList.remove("hidden");
+
+            let totalBenar = 0;
+            let totalSalah = 0;
+            const reviewContainer = document.getElementById("review-container");
+            reviewContainer.innerHTML = "";
+
+            // Menghitung poin & menyusun ulasan koreksi
+            bankSoal.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = (userAns === q.kunci);
+                
+                if(isCorrect) totalBenar++;
+                else totalSalah++;
+
+                // Susun element review koreksi
+                const reviewBox = document.createElement("div");
+                reviewBox.className = `p-4 rounded-lg border text-sm ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+                
+                reviewBox.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'} mb-1.5">
+                        <span>Nomor ${q.no}</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] uppercase tracking-wide ${isCorrect ? 'bg-green-200 text-green-900' : 'bg-red-200 text-red-900'}">
+                            ${isCorrect ? 'BENAR (+5 Poin)' : 'SALAH / KELIRU (0 Poin)'}
+                        </span>
+                    </div>
+                    <p class="text-gray-700 font-medium mb-2 leading-relaxed text-justify">${q.soal}</p>
+                    <div class="grid grid-cols-1 gap-1 text-xs">
+                        <div class="text-gray-600">Jawaban Anda: <span class="font-bold uppercase ${isCorrect ? 'text-green-700':'text-red-600'}">${userAns || '[Tidak Menjawab]'}</span> ${userAns ? `- ${q.opsi[userAns]}`:''}</div>
+                        <div class="text-emerald-800 font-semibold">Kunci Jawaban Tepat: <span class="font-bold uppercase">${q.kunci}</span> - ${q.opsi[q.kunci]}</div>
+                    </div>
+                `;
+                reviewContainer.appendChild(reviewBox);
+            });
+
+            // Hitung Skor Akhir berdasarkan Jumlah Benar dikali Poin 5
+            const skorAkhir = totalBenar * 5;
+
+            // Tampilkan ke element papan nilai
+            document.getElementById("result-nama").innerText = namaPeserta;
+            document.getElementById("result-benar").innerText = totalBenar;
+            document.getElementById("result-salah").innerText = totalSalah;
+            document.getElementById("result-skor").innerText = skorAkhir;
+
+            // Trigger re-render MathJax di halaman hasil jika ada rumusan matematika
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        }
+    </script>
+</body>
+</html>
